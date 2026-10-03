@@ -19,14 +19,14 @@ class MakeModuleCommand extends Command
      * @var string
      */
     protected $signature = 'make:module
-        {name? : The module/model name (e.g. Products/Product or Product)}
-        {--folder= : The folder/module namespace (e.g. Products)}
+        {name? : The module/model name (e.g. Users/User or User)}
+        {--folder= : The folder/module namespace (e.g. Users)}
         {--columns= : Comma-separated columns and types (e.g. name:string,price:decimal,is_active:boolean)}
         {--min-allowed= : Comma-separated columns for $minimumAllowedKey (defaults to id,created_at)}
         {--minimum-allowed-key= : Alias for --min-allowed}
-        {--not-allowed= : Comma-separated columns for $notAllowedKey (defaults to id,created_at)}
+        {--not-allowed= : Comma-separated columns for $notAllowedKey (defaults to [])}
         {--not-allowed-key= : Alias for --not-allowed}
-        {--log-except= : Comma-separated columns for $logExcept (defaults to id,created_at)}
+        {--log-except= : Comma-separated columns for $logExcept (defaults to id,updated_at)}
         {--force : Overwrite existing files if they exist}';
 
     /**
@@ -67,13 +67,13 @@ class MakeModuleCommand extends Command
         $notAllowedKey = $this->resolveArrayOption(
             optionNames: ['not-allowed', 'not-allowed-key'],
             prompt: 'Enter $notAllowedKey columns (comma-separated, or "none" for empty)',
-            default: 'id,created_at'
+            default: ''
         );
 
         $logExcept = $this->resolveArrayOption(
             optionNames: ['log-except'],
             prompt: 'Enter $logExcept columns (comma-separated, or "none" for empty)',
-            default: 'id,created_at'
+            default: 'id,updated_at'
         );
 
         $this->newLine();
@@ -116,7 +116,7 @@ class MakeModuleCommand extends Command
         $rawName = $this->argument('name');
 
         if (! $rawName && ! $this->option('no-interaction')) {
-            $rawName = $this->ask('Enter the model name (e.g. Products/Product or Product)');
+            $rawName = $this->ask('Enter the model name (e.g. Users/User or User)');
         }
 
         $rawName = trim((string) $rawName, " \t\n\r\0\x0B/\\");
