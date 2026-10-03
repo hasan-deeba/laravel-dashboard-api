@@ -32,10 +32,6 @@ class Role extends SpatieRole
                 return app(User::class)->transformList($this->users, ['id', 'name', 'email', 'is_active']);
             },
         ];
-        $this->specialFields = [
-            'created_at' => function () {return AppHelper::humanDate($this->created_at);},
-            'updated_at' => function () {return AppHelper::humanDate($this->updated_at);},
-        ];
         parent::__construct($attributes);
     }
 

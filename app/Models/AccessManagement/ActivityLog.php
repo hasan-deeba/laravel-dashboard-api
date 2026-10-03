@@ -38,9 +38,6 @@ class ActivityLog extends Activity
             'subject_type' => function () {
                 return $this->formatSubjectType();
             },
-            'created_at' => function () {
-                return AppHelper::humanDate($this->created_at);
-            }
         ];
         parent::__construct($attributes);
     }

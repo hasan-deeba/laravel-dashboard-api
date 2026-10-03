@@ -49,10 +49,11 @@ class MakeModuleCommand extends Command
 
         [$folderPath, $folderNamespace, $modelName] = $resolved;
 
-        $tableName = Str::snake(Str::pluralStudly($modelName));
+        $pluralModel = $this->toPluralStudly($modelName);
+        $tableName = $this->toSnake($pluralModel);
         $permissionPrefix = $tableName;
-        $routeUri = Str::kebab(Str::pluralStudly($modelName));
-        $routeFileName = Str::camel(str_replace(['/', '\\'], '_', $folderPath));
+        $routeUri = $this->toKebab($pluralModel);
+        $routeFileName = $this->toCamel(str_replace(['/', '\\'], '_', $folderPath));
 
         $columns = $this->resolveColumns();
         $columnNames = array_keys($columns);
@@ -137,10 +138,10 @@ class MakeModuleCommand extends Command
             $rawModel = $rawName;
         }
 
-        $modelName = Str::studly($rawModel);
+        $modelName = $this->toStudly($rawModel);
 
         if (! $rawFolder) {
-            $defaultFolder = Str::pluralStudly($modelName);
+            $defaultFolder = $this->toPluralStudly($modelName);
             $rawFolder = $this->option('no-interaction')
                 ? $defaultFolder
                 : $this->ask('Enter the module folder name', $defaultFolder);
@@ -151,10 +152,10 @@ class MakeModuleCommand extends Command
             fn ($segment) => trim($segment) !== ''
         ));
 
-        $studlySegments = array_map(fn ($segment) => Str::studly($segment), $folderSegments);
+        $studlySegments = array_map(fn ($segment) => $this->toStudly($segment), $folderSegments);
 
         if (empty($studlySegments)) {
-            $studlySegments = [Str::pluralStudly($modelName)];
+            $studlySegments = [$this->toPluralStudly($modelName)];
         }
 
         $folderPath = implode('/', $studlySegments);
@@ -195,13 +196,13 @@ class MakeModuleCommand extends Command
             }
 
             $parts = explode(':', $definition);
-            $colName = Str::snake(trim(array_shift($parts)));
+            $colName = $this->toSnake(trim((string) array_shift($parts)));
 
             if ($colName === '' || in_array($colName, ['id', 'created_at', 'updated_at'], true)) {
                 continue;
             }
 
-            $rawType = ! empty($parts) ? trim(array_shift($parts)) : 'string';
+            $rawType = ! empty($parts) ? trim((string) array_shift($parts)) : 'string';
             if ($rawType === '') {
                 $rawType = 'string';
             }
@@ -376,7 +377,6 @@ PHP;
 
 namespace App\Models\\{$folderNamespace};
 
-use App\Helpers\AppHelper;
 use App\Traits\ActivityLogsTrait;
 use App\Traits\ModelTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -393,20 +393,6 @@ class {$modelName} extends Model
     protected \$specialFields = [];
     protected \$extraFields = [];
     protected \$logExcept = {$logExceptExport};
-
-    public function __construct(array \$attributes = [])
-    {
-        \$this->extraFields = [];
-        \$this->specialFields = [
-            'created_at' => function () {
-                return AppHelper::humanDate(\$this->created_at);
-            },
-            'updated_at' => function () {
-                return AppHelper::humanDate(\$this->updated_at);
-            },
-        ];
-        parent::__construct(\$attributes);
-    }
 }
 
 PHP;
@@ -484,7 +470,7 @@ PHP;
     ): void {
         $controllerClass = "{$modelName}Controller";
         $serviceClass = "{$modelName}Service";
-        $serviceVar = Str::camel($serviceClass);
+        $serviceVar = $this->toCamel($serviceClass);
         $requestClass = "Create{$modelName}Request";
 
         $relativePath = "app/Http/Controllers/Cms/{$folderPath}/{$controllerClass}.php";
@@ -550,7 +536,7 @@ PHP;
 
         $headings = array_merge(
             ['#ID'],
-            array_map(fn (string $col) => Str::headline($col), $columnNames),
+            array_map(fn (string $col) => $this->toHeadline($col), $columnNames),
             ['Date']
         );
 
@@ -609,7 +595,7 @@ PHP;
     ): void {
         $controllerClass = "{$modelName}Controller";
         $controllerFqn = "App\\Http\\Controllers\\Cms\\{$folderNamespace}\\{$controllerClass}";
-        $sectionComment = Str::headline(Str::pluralStudly($modelName));
+        $sectionComment = $this->toHeadline($this->toPluralStudly($modelName));
 
         $relativeRoutePath = "routes/cms/{$routeFileName}.php";
         $fullRoutePath = base_path($relativeRoutePath);
@@ -702,7 +688,7 @@ PHP;
         if (File::exists($seederPath)) {
             $seederContent = File::get($seederPath);
             if (! str_contains($seederContent, "'{$permissionPrefix}.view'")) {
-                $label = Str::headline($modelName) . ' management';
+                $label = $this->toHeadline($modelName) . ' management';
                 $permLines = array_map(fn (string $perm) => "            '{$perm}',", $permissions);
                 $permBlock = "\n            // {$label}\n" . implode("\n", $permLines) . "\n        ];";
 
@@ -764,5 +750,63 @@ PHP;
         $quoted = array_map(fn (string $item) => "'" . addslashes($item) . "'", $items);
 
         return '[' . implode(', ', $quoted) . ']';
+    }
+
+    /**
+     * Convert a string to StudlyCase without relying on mb_split.
+     */
+    protected function toStudly(string $value): string
+    {
+        $words = preg_split('/[\s_-]+/', $value, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        return implode('', array_map(fn (string $word) => ucfirst($word), $words));
+    }
+
+    /**
+     * Convert a string to camelCase without relying on mb_split.
+     */
+    protected function toCamel(string $value): string
+    {
+        return lcfirst($this->toStudly($value));
+    }
+
+    /**
+     * Convert a string to snake_case (or custom delimiter) without relying on mb_split.
+     */
+    protected function toSnake(string $value, string $delimiter = '_'): string
+    {
+        $value = preg_replace('/\s+/u', '', ucwords($value)) ?? $value;
+        $value = preg_replace('/(.)(?=[A-Z])/u', '$1' . $delimiter, $value) ?? $value;
+        $value = preg_replace('/[' . preg_quote($delimiter, '/') . '_-]+/', $delimiter, $value) ?? $value;
+
+        return strtolower(trim($value, $delimiter));
+    }
+
+    /**
+     * Convert a string to kebab-case without relying on mb_split.
+     */
+    protected function toKebab(string $value): string
+    {
+        return $this->toSnake($value, '-');
+    }
+
+    /**
+     * Convert a string to Headline Case without relying on mb_split.
+     */
+    protected function toHeadline(string $value): string
+    {
+        return ucwords($this->toSnake($value, ' '));
+    }
+
+    /**
+     * Convert a StudlyCase string to its plural StudlyCase form without relying on mb_split.
+     */
+    protected function toPluralStudly(string $value): string
+    {
+        $studly = $this->toStudly($value);
+        $parts = preg_split('/(?=[A-Z])/', $studly, -1, PREG_SPLIT_NO_EMPTY) ?: [$studly];
+        $last = (string) array_pop($parts);
+
+        return implode('', $parts) . Str::plural($last);
     }
 }

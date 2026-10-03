@@ -48,11 +48,6 @@ class User extends Authenticatable
                 ]);
             },
         ];
-        $this->specialFields = [
-            'created_at' => function () {
-                return AppHelper::humanDate($this->created_at);
-            }
-        ];
         parent::__construct($attributes);
     }
     protected function casts(): array
