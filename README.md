@@ -18,24 +18,14 @@ A Laravel 12 backend for a modular dashboard/CMS. The project provides shared CR
 
 - PHP 8.2 or later
 - Composer
-- A database supported by Laravel (SQLite is the configured default)
-- Node.js and npm if you need to build the frontend assets
+- A database supported by Laravel (MySQL is the configured default)
 
-Install the PHP dependencies, create a local `.env` file with your application and database settings, then run the migrations and seeders:
+Install the PHP dependencies, create a local `.env` file or copy `.env.example` with your application and database settings, then run the migrations and seeders:
 
 ```bash
 composer install
 php artisan key:generate
 php artisan migrate --seed
-```
-
-This repository does not currently include an `.env.example`; configure your local environment before running Artisan commands. The default database connection is SQLite, configured in `config/database.php`.
-
-To build the frontend assets, if needed:
-
-```bash
-npm install
-npm run build
 ```
 
 ## Module architecture
