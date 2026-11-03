@@ -32,12 +32,12 @@ class ClientAuthTest extends TestCase
 
     protected function registerClient(array $overrides = []): \Illuminate\Testing\TestResponse
     {
-        return $this->postJson('/api/clients/register', $this->validPayload($overrides));
+        return $this->postJson('/api/register', $this->validPayload($overrides));
     }
 
     protected function verifyClient(string $email = 'hasan@example.com'): \Illuminate\Testing\TestResponse
     {
-        return $this->postJson('/api/clients/verify-otp', [
+        return $this->postJson('/api/verify-otp', [
             'email' => $email,
             'code' => '123456',
         ]);
@@ -49,26 +49,26 @@ class ClientAuthTest extends TestCase
 
     public function test_registration_builder_returns_translated_enum_options(): void
     {
-        $response = $this->getJson('/api/clients/registration-builder');
+        $response = $this->getJson('/api/register/builder');
 
         $response->assertOk()
-            ->assertJsonPath('genders.MALE', 'Male')
-            ->assertJsonPath('genders.FEMALE', 'Female')
-            ->assertJsonPath('marital_statuses.SINGLE', 'Single')
-            ->assertJsonPath('marital_statuses.MARRIED', 'Married')
-            ->assertJsonPath('marital_statuses.DIVORCED', 'Divorced')
-            ->assertJsonPath('marital_statuses.WIDOWED', 'Widowed');
+            ->assertJsonPath('data.genders.MALE', 'Male')
+            ->assertJsonPath('data.genders.FEMALE', 'Female')
+            ->assertJsonPath('data.marital_statuses.SINGLE', 'Single')
+            ->assertJsonPath('data.marital_statuses.MARRIED', 'Married')
+            ->assertJsonPath('data.marital_statuses.DIVORCED', 'Divorced')
+            ->assertJsonPath('data.marital_statuses.WIDOWED', 'Widowed');
     }
 
     public function test_registration_builder_returns_arabic_options(): void
     {
         $response = $this->withHeaders(['Accept-Language' => 'ar'])
-            ->getJson('/api/clients/registration-builder');
+            ->getJson('/api/register/builder');
 
         $response->assertOk()
-            ->assertJsonPath('genders.MALE', 'ذكر')
-            ->assertJsonPath('genders.FEMALE', 'أنثى')
-            ->assertJsonPath('marital_statuses.MARRIED', 'متزوج');
+            ->assertJsonPath('data.genders.MALE', 'ذكر')
+            ->assertJsonPath('data.genders.FEMALE', 'أنثى')
+            ->assertJsonPath('data.marital_statuses.MARRIED', 'متزوج');
     }
 
     /* ---------------------------------------------------------------------- */
@@ -80,14 +80,14 @@ class ClientAuthTest extends TestCase
         $response = $this->registerClient();
 
         $response->assertStatus(201)
-            ->assertJsonPath('item.client.email', 'hasan@example.com')
-            ->assertJsonPath('item.client.full_name', 'Hasan Deeba')
-            ->assertJsonPath('item.client.gender.value', GenderType::MALE->value)
-            ->assertJsonPath('item.client.gender.name', 'Male')
-            ->assertJsonPath('item.client.gender.color', 'primary')
-            ->assertJsonPath('item.client.marital_status.value', MaritalStatusType::SINGLE->value)
-            ->assertJsonPath('item.client.marital_status.name', 'Single')
-            ->assertJsonPath('item.client.is_verified', false);
+            ->assertJsonPath('data.client.email', 'hasan@example.com')
+            ->assertJsonPath('data.client.full_name', 'Hasan Deeba')
+            ->assertJsonPath('data.client.gender.value', GenderType::MALE->value)
+            ->assertJsonPath('data.client.gender.name', 'Male')
+            ->assertJsonPath('data.client.gender.color', 'primary')
+            ->assertJsonPath('data.client.marital_status.value', MaritalStatusType::SINGLE->value)
+            ->assertJsonPath('data.client.marital_status.name', 'Single')
+            ->assertJsonPath('data.client.is_verified', false);
 
         $this->assertDatabaseHas('clients', [
             'email' => 'hasan@example.com',
@@ -134,7 +134,7 @@ class ClientAuthTest extends TestCase
 
     public function test_registration_requires_mandatory_fields(): void
     {
-        $response = $this->postJson('/api/clients/register', []);
+        $response = $this->postJson('/api/register', []);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['first_name', 'last_name', 'gender', 'marital_status', 'email', 'password']);
@@ -151,7 +151,7 @@ class ClientAuthTest extends TestCase
         $response = $this->verifyClient();
 
         $response->assertOk()
-            ->assertJsonStructure(['message', 'item' => ['access_token', 'client']]);
+            ->assertJsonStructure(['message', 'data' => ['access_token', 'client']]);
 
         $client = Client::where('email', 'hasan@example.com')->first();
         $this->assertNotNull($client->email_verified_at);
@@ -168,7 +168,7 @@ class ClientAuthTest extends TestCase
     {
         $this->registerClient();
 
-        $response = $this->postJson('/api/clients/verify-otp', [
+        $response = $this->postJson('/api/verify-otp', [
             'email' => 'hasan@example.com',
             'code' => '000000',
         ]);
@@ -192,7 +192,7 @@ class ClientAuthTest extends TestCase
     {
         $this->registerClient();
 
-        $response = $this->postJson('/api/clients/resend-otp', ['email' => 'hasan@example.com']);
+        $response = $this->postJson('/api/resend-otp', ['email' => 'hasan@example.com']);
 
         $response->assertOk();
         $this->assertDatabaseHas('users_otp_codes', [
@@ -208,7 +208,7 @@ class ClientAuthTest extends TestCase
         $this->registerClient();
         $this->verifyClient();
 
-        $response = $this->postJson('/api/clients/resend-otp', ['email' => 'hasan@example.com']);
+        $response = $this->postJson('/api/resend-otp', ['email' => 'hasan@example.com']);
 
         $response->assertStatus(400);
     }
@@ -221,7 +221,7 @@ class ClientAuthTest extends TestCase
     {
         $this->registerClient();
 
-        $response = $this->postJson('/api/clients/login', [
+        $response = $this->postJson('/api/login', [
             'email' => 'hasan@example.com',
             'password' => 'password123',
         ]);
@@ -244,7 +244,7 @@ class ClientAuthTest extends TestCase
             'is_active' => false,
         ]);
 
-        $response = $this->postJson('/api/clients/login', [
+        $response = $this->postJson('/api/login', [
             'email' => 'hasan@example.com',
             'password' => 'password123',
         ]);
@@ -259,21 +259,21 @@ class ClientAuthTest extends TestCase
             'password' => 'password123',
         ]);
 
-        $response = $this->postJson('/api/clients/login', [
+        $response = $this->postJson('/api/login', [
             'email' => 'hasan@example.com',
             'password' => 'password123',
         ]);
 
         $response->assertOk()
-            ->assertJsonStructure(['message', 'item' => ['access_token', 'client']])
-            ->assertJsonPath('item.client.email', 'hasan@example.com');
+            ->assertJsonStructure(['message', 'data' => ['access_token', 'client']])
+            ->assertJsonPath('data.client.email', 'hasan@example.com');
 
-        $token = $response->json('item.access_token');
+        $token = $response->json('data.access_token');
 
         $this->withHeader('Authorization', "Bearer {$token}")
-            ->getJson('/api/clients/me')
+            ->getJson('/api/me')
             ->assertOk()
-            ->assertJsonPath('email', 'hasan@example.com');
+            ->assertJsonPath('data.email', 'hasan@example.com');
     }
 
     public function test_login_fails_with_wrong_password(): void
@@ -283,7 +283,7 @@ class ClientAuthTest extends TestCase
             'password' => 'password123',
         ]);
 
-        $response = $this->postJson('/api/clients/login', [
+        $response = $this->postJson('/api/login', [
             'email' => 'hasan@example.com',
             'password' => 'wrong-password',
         ]);
@@ -299,13 +299,13 @@ class ClientAuthTest extends TestCase
         ]);
 
         for ($i = 0; $i < 5; $i++) {
-            $this->postJson('/api/clients/login', [
+            $this->postJson('/api/login', [
                 'email' => 'hasan@example.com',
                 'password' => 'wrong-password',
             ])->assertStatus(401);
         }
 
-        $this->postJson('/api/clients/login', [
+        $this->postJson('/api/login', [
             'email' => 'hasan@example.com',
             'password' => 'wrong-password',
         ])->assertStatus(429);
@@ -319,7 +319,7 @@ class ClientAuthTest extends TestCase
     {
         Client::factory()->create(['email' => 'hasan@example.com']);
 
-        $response = $this->postJson('/api/clients/forget-password', ['email' => 'hasan@example.com']);
+        $response = $this->postJson('/api/forget-password', ['email' => 'hasan@example.com']);
 
         $response->assertOk();
         $this->assertDatabaseHas('users_otp_codes', [
@@ -337,9 +337,9 @@ class ClientAuthTest extends TestCase
             'password' => 'password123',
         ]);
 
-        $this->postJson('/api/clients/forget-password', ['email' => 'hasan@example.com'])->assertOk();
+        $this->postJson('/api/forget-password', ['email' => 'hasan@example.com'])->assertOk();
 
-        $response = $this->postJson('/api/clients/reset-password', [
+        $response = $this->postJson('/api/reset-password', [
             'email' => 'hasan@example.com',
             'code' => '123456',
             'password' => 'new-password-123',
@@ -355,12 +355,12 @@ class ClientAuthTest extends TestCase
         ]);
 
         // New password works, old one does not.
-        $this->postJson('/api/clients/login', [
+        $this->postJson('/api/login', [
             'email' => 'hasan@example.com',
             'password' => 'new-password-123',
         ])->assertOk();
 
-        $this->postJson('/api/clients/login', [
+        $this->postJson('/api/login', [
             'email' => 'hasan@example.com',
             'password' => 'password123',
         ])->assertStatus(401);
@@ -369,9 +369,9 @@ class ClientAuthTest extends TestCase
     public function test_reset_password_rejects_incorrect_code(): void
     {
         Client::factory()->create(['email' => 'hasan@example.com']);
-        $this->postJson('/api/clients/forget-password', ['email' => 'hasan@example.com'])->assertOk();
+        $this->postJson('/api/forget-password', ['email' => 'hasan@example.com'])->assertOk();
 
-        $response = $this->postJson('/api/clients/reset-password', [
+        $response = $this->postJson('/api/reset-password', [
             'email' => 'hasan@example.com',
             'code' => '000000',
             'password' => 'new-password-123',
@@ -387,7 +387,7 @@ class ClientAuthTest extends TestCase
 
     public function test_me_requires_authentication(): void
     {
-        $this->getJson('/api/clients/me')->assertStatus(401);
+        $this->getJson('/api/me')->assertStatus(401);
     }
 
     public function test_client_can_logout(): void
@@ -397,15 +397,15 @@ class ClientAuthTest extends TestCase
             'password' => 'password123',
         ]);
 
-        $login = $this->postJson('/api/clients/login', [
+        $login = $this->postJson('/api/login', [
             'email' => 'hasan@example.com',
             'password' => 'password123',
         ])->assertOk();
 
-        $token = $login->json('item.access_token');
+        $token = $login->json('data.access_token');
 
         $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson('/api/clients/logout')
+            ->postJson('/api/logout')
             ->assertOk();
 
         $this->assertDatabaseCount('personal_access_tokens', 0);
@@ -415,7 +415,7 @@ class ClientAuthTest extends TestCase
         $this->app['auth']->forgetGuards();
 
         $this->withHeader('Authorization', "Bearer {$token}")
-            ->getJson('/api/clients/me')
+            ->getJson('/api/me')
             ->assertStatus(401);
     }
 
@@ -430,12 +430,12 @@ class ClientAuthTest extends TestCase
             'password' => 'password123',
         ]);
 
-        $login = $this->postJson('/api/clients/login', [
+        $login = $this->postJson('/api/login', [
             'email' => 'hasan@example.com',
             'password' => 'password123',
         ])->assertOk();
 
-        $token = $login->json('item.access_token');
+        $token = $login->json('data.access_token');
 
         $this->withHeader('Authorization', "Bearer {$token}")
             ->getJson('/cms/users')
@@ -452,7 +452,7 @@ class ClientAuthTest extends TestCase
         $token = $user->createToken('cms-token')->plainTextToken;
 
         $this->withHeader('Authorization', "Bearer {$token}")
-            ->getJson('/api/clients/me')
+            ->getJson('/api/me')
             ->assertStatus(401);
     }
 }

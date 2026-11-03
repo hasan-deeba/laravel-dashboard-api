@@ -10,13 +10,13 @@ use App\Http\Requests\Api\Clients\Auth\ClientResetPasswordRequest;
 use App\Http\Requests\Api\Clients\Auth\ResendOtpRequest;
 use App\Http\Requests\Api\Clients\Auth\VerifyOtpRequest;
 use App\Services\Api\Clients\ClientAuthService;
-use App\Traits\ApiResponse;
+use App\Traits\ClientApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ClientAuthController extends Controller
 {
-    use ApiResponse;
+    use ClientApiResponse;
 
     public function __construct(protected ClientAuthService $clientAuthService)
     {
@@ -29,7 +29,7 @@ class ClientAuthController extends Controller
     {
         $result = $this->clientAuthService->registrationBuilder($request);
 
-        return $this->showAll($result->item, $result->code);
+        return $this->respond($result);
     }
 
     /**
@@ -39,11 +39,7 @@ class ClientAuthController extends Controller
     {
         $result = $this->clientAuthService->register($request->validated());
 
-        if ($result->valid) {
-            return $this->successMessageWithItem($result->message, $result->item, $result->code);
-        }
-
-        return $this->errorResponse($result->message, $result->code);
+        return $this->respond($result);
     }
 
     /**
@@ -53,11 +49,7 @@ class ClientAuthController extends Controller
     {
         $result = $this->clientAuthService->verifyOtp($request->validated());
 
-        if ($result->valid) {
-            return $this->successMessageWithItem($result->message, $result->item, $result->code);
-        }
-
-        return $this->errorResponse($result->message, $result->code);
+        return $this->respond($result);
     }
 
     /**
@@ -67,7 +59,7 @@ class ClientAuthController extends Controller
     {
         $result = $this->clientAuthService->resendOtp($request->validated());
 
-        return $this->responseMessage($result->message, $result->code, $result->valid);
+        return $this->respond($result);
     }
 
     /**
@@ -77,11 +69,7 @@ class ClientAuthController extends Controller
     {
         $result = $this->clientAuthService->login($request->validated(), $request->ip());
 
-        if ($result->valid) {
-            return $this->successMessageWithItem($result->message, $result->item, $result->code);
-        }
-
-        return $this->errorResponse($result->message, $result->code);
+        return $this->respond($result);
     }
 
     /**
@@ -91,7 +79,7 @@ class ClientAuthController extends Controller
     {
         $result = $this->clientAuthService->forgetPassword($request->validated());
 
-        return $this->responseMessage($result->message, $result->code, $result->valid);
+        return $this->respond($result);
     }
 
     /**
@@ -101,7 +89,7 @@ class ClientAuthController extends Controller
     {
         $result = $this->clientAuthService->resetPassword($request->validated());
 
-        return $this->responseMessage($result->message, $result->code, $result->valid);
+        return $this->respond($result);
     }
 
     /**
@@ -109,7 +97,7 @@ class ClientAuthController extends Controller
      */
     public function me(Request $request): JsonResponse
     {
-        return $this->showOne($request->user()->transformItemExclude());
+        return $this->successResponse(__('messages.Success'), $request->user()->transformItemExclude());
     }
 
     /**
@@ -119,6 +107,6 @@ class ClientAuthController extends Controller
     {
         $request->user()->currentAccessToken()->delete();
 
-        return $this->successMessage(__('messages.Logged out successfully'));
+        return $this->successResponse(__('messages.Logged out successfully'));
     }
 }

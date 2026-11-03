@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'Success' => 'تم بنجاح',
     'These credentials do not match our records' => 'البريد الاكتروني و كلمة السر غير صحيحين',
 
     // Client auth

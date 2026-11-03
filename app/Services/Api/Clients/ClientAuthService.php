@@ -41,7 +41,7 @@ class ClientAuthService
         return new ResultService(
             valid: true,
             code: 200,
-            message: 'Success',
+            message: __('messages.Success'),
             item: [
                 'genders' => GenderType::labels(),
                 'marital_statuses' => MaritalStatusType::labels(),
