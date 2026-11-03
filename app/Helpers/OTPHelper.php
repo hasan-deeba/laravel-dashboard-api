@@ -20,26 +20,29 @@ class OTPHelper
         return 3600;
     }
 
-    public static function createOTPCode($email, $guard, $type)
+    public static function createOTPCode($email, $guard, $type, $code = null)
     {
-        $code = self::generateCode();
-        UsersOtpCode::create([
+        $code = $code ?? self::generateCode();
+        UsersOtpCode::updateOrCreate([
             'email' => $email,
             'guard' => $guard,
+        ], [
             'code' => $code,
-            'type' =>$type,
+            'type' => $type,
             'expires_at' => Carbon::now()->addSeconds(self::otpSecondsBeforeExpire()),
         ]);
         return $code;
     }
 
-    public static function validateOTPCode($code, $guard, $type): ResultService
+    public static function validateOTPCode($code, $guard, $type, $email = null): ResultService
     {
         $code = UsersOtpCode::where([
             'code' => $code,
             'guard' => $guard,
             'type' => $type,
-        ])->first();
+        ])
+            ->when(!is_null($email), fn($query) => $query->where('email', $email))
+            ->first();
 
         if (!$code)
             return new ResultService(valid: false, code: 404, message: __('messages.Incorrect code'));
@@ -47,7 +50,7 @@ class OTPHelper
         if ($code->expires_at < Carbon::now()->toDateTimeString())
             return new ResultService(valid: false, code: 404, message: __('messages.Expired code'));
 
-        return new ResultService(item: $code);
+        return new ResultService(item: ['code' => $code]);
     }
 
 

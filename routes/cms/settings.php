@@ -3,7 +3,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Cms\AccessManagement\AuthController;
 use App\Http\Controllers\Cms\Settings\NotificationController;
 
-    Route::middleware(['auth:sanctum'])->group(function () {
+    Route::middleware(['auth:cms'])->group(function () {
         Route::get('/profile', [AuthController::class, 'me']);
 
         // Notifications

@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:cms'])->group(function () {
     // Users
     Route::get('/users/builder', [UserController::class, 'builder']);
     Route::resource('users', UserController::class)->except(['create', 'edit']);

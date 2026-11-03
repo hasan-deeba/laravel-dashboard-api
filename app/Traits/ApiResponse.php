@@ -21,6 +21,11 @@ trait ApiResponse
         return response()->json(['message' => $message, 'code' => $code, 'item' => $item], $code);
     }
 
+    protected function successMessageWithItem($message, $item, $code = 200): JsonResponse
+    {
+        return response()->json(['message' => $message, 'code' => $code, 'item' => $item], $code);
+    }
+
     public function responseMessage($message, $code = 200, $valid = true): JsonResponse
     {
         return $valid ? $this->successMessage($message, $code) : $this->errorResponse($message, $code);
