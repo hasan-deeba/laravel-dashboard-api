@@ -44,6 +44,10 @@ return [
             'driver' => 'sanctum',
             'provider' => 'users',
         ],
+        'clients' => [
+            'driver' => 'sanctum',
+            'provider' => 'clients',
+        ],
     ],
 
     /*
@@ -67,6 +71,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', \App\Models\AccessManagement\User::class),
+        ],
+
+        'clients' => [
+            'driver' => 'eloquent',
+            'model' => \App\Models\Clients\Client::class,
         ],
 
         // 'users' => [

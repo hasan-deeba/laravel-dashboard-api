@@ -1,0 +1,36 @@
+<?php
+
+return [
+    'groups' => [
+        'branding' => 'الهوية البصرية',
+        'localization' => 'اللغة',
+        'support' => 'الدعم والتواصل',
+        'legal' => 'الشروط والخصوصية',
+        'availability' => 'إتاحة التطبيق',
+        'apps' => 'تحديثات تطبيقات الجوال',
+    ],
+    'fields' => [
+        'branding_app_name' => 'اسم المشروع',
+        'branding_app_icon' => 'أيقونة المشروع المشتركة لجميع المنصات',
+        'branding_logo' => 'الشعار',
+        'branding_favicon' => 'أيقونة الموقع',
+        'branding_primary_color' => 'اللون الأساسي',
+        'localization_default_locale' => 'اللغة الافتراضية',
+        'support_email' => 'البريد الإلكتروني للدعم',
+        'support_phone' => 'هاتف الدعم',
+        'support_website_url' => 'الموقع الإلكتروني',
+        'legal_privacy_policy_url' => 'رابط سياسة الخصوصية',
+        'legal_terms_url' => 'رابط الشروط والأحكام',
+        'availability_maintenance_enabled' => 'وضع الصيانة لتطبيقات العملاء',
+        'availability_maintenance_message' => 'رسالة الصيانة',
+        'availability_registration_enabled' => 'السماح بالتسجيل الجديد',
+        'apps_ios_version' => 'أقدم إصدار مدعوم لنظام iOS',
+        'apps_ios_lock_for_update' => 'إلزام إصدارات iOS الأقدم بالتحديث',
+        'apps_ios_store_url' => 'رابط App Store',
+        'apps_ios_update_message' => 'رسالة تحديث iOS',
+        'apps_android_version' => 'أقدم إصدار مدعوم لنظام Android',
+        'apps_android_lock_for_update' => 'إلزام إصدارات Android الأقدم بالتحديث',
+        'apps_android_store_url' => 'رابط Google Play',
+        'apps_android_update_message' => 'رسالة تحديث Android',
+    ],
+];

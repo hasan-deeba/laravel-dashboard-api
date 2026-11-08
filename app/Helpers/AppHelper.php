@@ -4,7 +4,7 @@ namespace App\Helpers;
 
 
 
-use App\Models\General\Setting;
+use App\Services\Settings\SettingsService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\App;
 
@@ -29,12 +29,9 @@ class AppHelper
         return Carbon::parse($date)->translatedFormat($hasExplicitTime ? 'l، j F Y \a\t g:i A' : 'l، j F Y');
     }
 
-    public static function getSettingValue($ident)
+    public static function getSettingValue(string $key): mixed
     {
-        $setting = Setting::where('ident', $ident)->first();
-        if ($setting)
-            return $setting->value;
-        return null;
+        return app(SettingsService::class)->value($key);
     }
 
 

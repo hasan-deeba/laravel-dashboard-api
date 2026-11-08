@@ -104,7 +104,7 @@ class AuthController extends Controller
         if ($result->valid){
             $user->password = Hash::make($data['password']);
             $user->save();
-            $result->item->delete();
+            $result->item['code']->delete();
         }
         return $this->responseMessage($result->message, $result->code, $result->valid);
     }
