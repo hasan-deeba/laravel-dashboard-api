@@ -35,7 +35,6 @@ return [
         'URL' => 'URL',
         'PHONE' => 'Phone',
         'COLOR' => 'Color',
-        'LOCALE' => 'Language',
         'VERSION' => 'Version',
     ],
 ];

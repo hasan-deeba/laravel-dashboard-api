@@ -62,7 +62,7 @@ class ApplicationSettingsTest extends TestCase
         $response = $this->getJson('/api/settings')->assertOk();
         $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
         $response->assertJsonStructure(['message', 'data' => [
-                'branding', 'localization', 'support', 'legal', 'availability', 'apps', 'update',
+                'branding', 'support', 'legal', 'availability', 'apps', 'update',
             ]])
             ->assertJsonPath('data.branding.app_name.en', 'HeroDash')
             ->assertJsonPath('data.branding.app_icon', null)
@@ -106,7 +106,6 @@ class ApplicationSettingsTest extends TestCase
         $this->assertSame('IMAGE', $fields['branding.app_icon']['type']);
         $this->assertSame(4096, $fields['branding.app_icon']['max_kilobytes']);
         $this->assertSame('MAJOR.MINOR.PATCH', $fields['apps.ios.version']['format']);
-        $this->assertSame(['en' => 'English', 'ar' => 'العربية'], $fields['localization.default_locale']['options']);
     }
 
     public function test_partial_update_preserves_types_and_unsubmitted_settings(): void
@@ -115,7 +114,6 @@ class ApplicationSettingsTest extends TestCase
             'branding' => ['app_name' => ['en' => 'Shared project', 'ar' => 'المشروع المشترك'], 'primary_color' => '#112233'],
             'support' => ['email' => 'help@example.com', 'phone' => '+31 (174) 123-456'],
             'legal' => ['privacy_policy_url' => 'https://example.com/privacy', 'terms_url' => 'https://example.com/terms'],
-            'localization' => ['default_locale' => 'ar'],
             'availability' => ['registration_enabled' => false],
         ])->assertOk()->assertJsonPath('message', 'Settings updated successfully.')->assertJsonPath('code', 200);
 
@@ -142,7 +140,8 @@ class ApplicationSettingsTest extends TestCase
         $user->postJson('/cms/settings', [])->assertUnprocessable()->assertJsonValidationErrors('settings');
         $user->postJson('/cms/settings', ['branding' => ['primary_color' => 'blue']])->assertUnprocessable();
         $user->postJson('/cms/settings', ['support' => ['email' => 'invalid']])->assertUnprocessable();
-        $user->postJson('/cms/settings', ['localization' => ['default_locale' => 'fr']])->assertUnprocessable();
+        $user->postJson('/cms/settings', ['localization' => ['default_locale' => 'ar']])
+            ->assertUnprocessable()->assertJsonValidationErrors('localization.default_locale');
         $user->postJson('/cms/settings', ['availability' => ['maintenance_enabled' => 'perhaps']])->assertUnprocessable();
         $user->postJson('/cms/settings', ['apps' => ['ios' => ['version' => '1.2']]])->assertUnprocessable();
         $user->postJson('/cms/settings', ['branding' => ['app_name' => ['en' => 'Valid', 'fr' => 'Unknown']]])->assertUnprocessable();
@@ -297,10 +296,10 @@ class ApplicationSettingsTest extends TestCase
         $this->postJson('/api/register', $this->registrationPayload())->assertCreated();
     }
 
-    public function test_saved_locale_is_default_and_supported_header_wins(): void
+    public function test_config_locale_is_default_and_supported_header_wins(): void
     {
+        config(['app.locale' => 'ar']);
         $this->save([
-            'localization' => ['default_locale' => 'ar'],
             'availability' => [
                 'maintenance_enabled' => true,
                 'maintenance_message' => ['en' => 'Back soon', 'ar' => 'نعود قريباً'],

@@ -12,7 +12,6 @@ enum SettingType: string
     case URL = 'URL';
     case PHONE = 'PHONE';
     case COLOR = 'COLOR';
-    case LOCALE = 'LOCALE';
     case VERSION = 'VERSION';
 
     public static function values(): array
@@ -45,7 +44,6 @@ enum SettingType: string
             self::URL->value => 'info',
             self::PHONE->value => 'gray',
             self::COLOR->value => 'warning',
-            self::LOCALE->value => 'primary',
             self::VERSION->value => 'warning',
         ];
     }

@@ -54,9 +54,6 @@ class SettingsService extends CrudService
             if (isset($definition['max_length'])) {
                 $field['max_length'] = $definition['max_length'];
             }
-            if ($definition['type'] === SettingType::LOCALE) {
-                $field['options'] = ['en' => 'English', 'ar' => 'العربية'];
-            }
             if ($definition['type'] === SettingType::IMAGE) {
                 $field['accept'] = ['jpg', 'jpeg', 'png', 'webp'];
                 $field['max_kilobytes'] = 4096;
