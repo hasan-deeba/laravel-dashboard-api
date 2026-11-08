@@ -4,6 +4,15 @@ return [
     'Success' => 'Success',
     'These credentials do not match our records' => 'These credentials do not match our records.',
 
+    // Application settings
+    'Settings updated successfully' => 'Settings updated successfully.',
+    'Unable to save settings' => 'Unable to save settings. Please try again.',
+    'Unknown setting' => 'This setting is not supported.',
+    'No settings provided' => 'Provide at least one setting to update.',
+    'Update version and store link are required when locked' => 'A minimum version and store link are required when the update lock is enabled.',
+    'Registration is disabled' => 'New registrations are currently disabled.',
+    'Server error' => 'An unexpected error occurred.',
+
     // Client auth
     'Registered successfully' => 'Registered successfully. Please verify your account using the code sent to you.',
     'Account verified successfully' => 'Account verified successfully.',

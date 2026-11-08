@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Middleware\EnsureClientAvailable;
 use App\Http\Middleware\EnsureHasPermission;
 use App\Http\Middleware\EnsureHasRole;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->group(base_path('routes/cms/settings.php'));
 
             Route::prefix('api')
+                ->group(base_path('routes/api/settings.php'))
                 ->group(base_path('routes/api/clients.php'));
         },
     )
@@ -25,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'permission' => EnsureHasPermission::class,
             'role' => EnsureHasRole::class,
+            'client.available' => EnsureClientAvailable::class,
         ]);
 
         // API middleware
@@ -43,5 +48,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Keep client-facing HTTP errors in the {message} envelope even when
+        // APP_DEBUG is enabled. CMS/shared exception rendering is unchanged.
+        $exceptions->render(function (HttpExceptionInterface $e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json(
+                    ['message' => $e->getMessage() ?: __('messages.Server error')],
+                    $e->getStatusCode(),
+                    $e->getHeaders(),
+                );
+            }
+        });
     })->create();

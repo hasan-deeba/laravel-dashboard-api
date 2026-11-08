@@ -22,4 +22,20 @@ return [
         'RESET_PASSWORD' => 'إعادة تعيين كلمة المرور',
         'REGISTER' => 'تسجيل حساب',
     ],
+    'app_platform' => [
+        'IOS' => 'iOS',
+        'ANDROID' => 'Android',
+    ],
+    'setting_type' => [
+        'TEXT' => 'نص',
+        'TRANSLATABLE_TEXT' => 'نص مترجم',
+        'BOOLEAN' => 'تفعيل / تعطيل',
+        'IMAGE' => 'صورة',
+        'EMAIL' => 'بريد إلكتروني',
+        'URL' => 'رابط',
+        'PHONE' => 'هاتف',
+        'COLOR' => 'لون',
+        'LOCALE' => 'لغة',
+        'VERSION' => 'إصدار',
+    ],
 ];

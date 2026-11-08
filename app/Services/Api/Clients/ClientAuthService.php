@@ -8,6 +8,7 @@ use App\Enum\OTPType;
 use App\Helpers\OTPHelper;
 use App\Models\Clients\Client;
 use App\Services\ResultService;
+use App\Services\Settings\SettingsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
@@ -15,6 +16,10 @@ use Illuminate\Support\Str;
 
 class ClientAuthService
 {
+    public function __construct(protected SettingsService $settingsService)
+    {
+    }
+
     /**
      * The auth guard / OTP guard used for clients.
      */
@@ -54,6 +59,13 @@ class ClientAuthService
      */
     public function register(array $data): ResultService
     {
+        // Recheck immediately before writing, so disabling registration also
+        // blocks direct API calls (not just the dashboard registration form).
+        $availability = $this->settingsService->registrationAvailability();
+        if (!$availability->valid) {
+            return $availability;
+        }
+
         $client = Client::create($data);
 
         $this->sendOtp($client, OTPType::REGISTER);

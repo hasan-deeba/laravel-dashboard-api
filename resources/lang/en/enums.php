@@ -22,4 +22,20 @@ return [
         'RESET_PASSWORD' => 'Reset password',
         'REGISTER' => 'Register',
     ],
+    'app_platform' => [
+        'IOS' => 'iOS',
+        'ANDROID' => 'Android',
+    ],
+    'setting_type' => [
+        'TEXT' => 'Text',
+        'TRANSLATABLE_TEXT' => 'Translated text',
+        'BOOLEAN' => 'On / off',
+        'IMAGE' => 'Image',
+        'EMAIL' => 'Email',
+        'URL' => 'URL',
+        'PHONE' => 'Phone',
+        'COLOR' => 'Color',
+        'LOCALE' => 'Language',
+        'VERSION' => 'Version',
+    ],
 ];
