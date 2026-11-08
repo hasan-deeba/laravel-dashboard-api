@@ -3,7 +3,6 @@
 return [
     'groups' => [
         'branding' => 'Branding',
-        'localization' => 'Language',
         'support' => 'Support & contact',
         'legal' => 'Legal',
         'availability' => 'App availability',
@@ -15,7 +14,6 @@ return [
         'branding_logo' => 'Logo',
         'branding_favicon' => 'Favicon',
         'branding_primary_color' => 'Primary color',
-        'localization_default_locale' => 'Default language',
         'support_email' => 'Support email',
         'support_phone' => 'Support phone',
         'support_website_url' => 'Website',

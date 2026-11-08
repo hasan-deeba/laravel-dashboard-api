@@ -4,11 +4,9 @@ namespace App\Http\Requests\Cms\Settings;
 
 use App\Enum\AppPlatform;
 use App\Enum\SettingType;
-use App\Helpers\AppHelper;
 use App\Models\Settings\Setting;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Arr;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class UpdateSettingsRequest extends FormRequest
@@ -37,7 +35,6 @@ class UpdateSettingsRequest extends FormRequest
                 SettingType::URL => ['url:http,https', 'max:2048'],
                 SettingType::PHONE => ['string', 'max:40', 'regex:/^\+?[0-9 ().-]+$/'],
                 SettingType::COLOR => ['string', 'regex:/^#[0-9a-fA-F]{6}$/'],
-                SettingType::LOCALE => [Rule::in(AppHelper::languages())],
                 SettingType::VERSION => ['string', 'max:32', 'regex:/^(0|[1-9][0-9]{0,8})\.(0|[1-9][0-9]{0,8})\.(0|[1-9][0-9]{0,8})$/'],
             }];
 

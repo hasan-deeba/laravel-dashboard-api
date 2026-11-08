@@ -1,13 +1,13 @@
-# Application settings — local review
+# Application settings — review
 
-**Status:** implemented locally for review. **Not committed, pushed, deployed, or started as a live preview.**
-Branch: `arena/7c895d15-laravel-dashboard-api` (the fixed Arena session branch).
+**Status:** the base settings feature was merged in PR #2. This follow-up removes default language from database-backed settings; default language is controlled by `config/app.php`. **Not deployed or started as a live preview.**
+Branch: `arena/051e15d7-laravel-dashboard-api` (the fixed Arena session branch).
 
 ## What was added
 
 - **One shared project icon** (`branding.app_icon`) returned to dashboard, web, and mobile clients. This is project branding, not a personal/user avatar.
 - Optional shared **logo**, **favicon**, project name, and primary color.
-- Default **locale**. A supported `Accept-Language` header still overrides the default locale for that request. Timezone handling is intentionally left as it was before this feature.
+- **Default language is not a settings field.** It is controlled by `APP_LOCALE` in `config/app.php` (default `en`, fallback `en`). A supported `Accept-Language` header still overrides it for that request. Timezone handling is intentionally left as it was before this feature.
 - Support **email**, **phone**, and **website URL**.
 - **Privacy policy** and **terms** URLs.
 - Client **maintenance mode** and **registration switch**, enforced server-side. CMS/dashboard routes remain available during client maintenance.
@@ -101,7 +101,7 @@ An API flag alone cannot stop an already-installed native app from opening; the 
 - [ ] iOS/Android minimum-version lock semantics are correct.
 - [ ] Maintenance should block all client routes, including authenticated client routes, while leaving CMS and public settings available.
 - [ ] Registration switch should block only new registrations, not existing-client login.
-- [ ] Default locale and supported-language override are acceptable.
+- [ ] Config-based default language (`APP_LOCALE`) and supported-language override are acceptable; no locale field appears in the settings builder.
 - [ ] External dashboard/native teams can consume the builder and startup-check contracts above.
 
 ## Validation performed locally
@@ -112,7 +112,7 @@ Focused tests passed in the PHP-WASM sandbox:
 - `tests/Feature/Clients/ClientAuthTest.php`: **23 tests, 89 assertions — OK**
 - PHP syntax check: **139 files, 0 errors**
 - Scratch-database migration: **OK**
-- `SettingsSeeder` run twice: **OK**, **22 rows** for **22 registry keys**, no duplicates
+- `SettingsSeeder` run twice on a fresh scratch database: **OK**, **21 rows** for **21 registry keys**, no duplicates, **0 locale rows**
 - Settings routes registered: **4**
 
 The temporary PHP-WASM migration override used for testing was removed. The legacy full test suite was not run because it contains pre-existing unrelated starter-kit assumptions.

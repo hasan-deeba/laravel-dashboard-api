@@ -3,7 +3,6 @@
 return [
     'groups' => [
         'branding' => 'الهوية البصرية',
-        'localization' => 'اللغة',
         'support' => 'الدعم والتواصل',
         'legal' => 'الشروط والخصوصية',
         'availability' => 'إتاحة التطبيق',
@@ -15,7 +14,6 @@ return [
         'branding_logo' => 'الشعار',
         'branding_favicon' => 'أيقونة الموقع',
         'branding_primary_color' => 'اللون الأساسي',
-        'localization_default_locale' => 'اللغة الافتراضية',
         'support_email' => 'البريد الإلكتروني للدعم',
         'support_phone' => 'هاتف الدعم',
         'support_website_url' => 'الموقع الإلكتروني',

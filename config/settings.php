@@ -16,7 +16,7 @@ use App\Enum\SettingType;
 */
 
 $settings = [
-    'groups' => ['branding', 'localization', 'support', 'legal', 'availability', 'apps'],
+    'groups' => ['branding', 'support', 'legal', 'availability', 'apps'],
 
     'fields' => [
         'branding.app_name' => [
@@ -39,10 +39,6 @@ $settings = [
         'branding.primary_color' => [
             'type' => SettingType::COLOR,
             'default' => '#2563EB', 'nullable' => true, 'public' => true,
-        ],
-        'localization.default_locale' => [
-            'type' => SettingType::LOCALE,
-            'default' => 'en', 'nullable' => false, 'public' => true,
         ],
         'support.email' => [
             'type' => SettingType::EMAIL,
