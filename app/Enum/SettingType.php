@@ -6,12 +6,12 @@ enum SettingType: string
 {
     case TEXT = 'TEXT';
     case TRANSLATABLE_TEXT = 'TRANSLATABLE_TEXT';
+    case TRANSLATABLE_MARKDOWN = 'TRANSLATABLE_MARKDOWN';
     case BOOLEAN = 'BOOLEAN';
     case IMAGE = 'IMAGE';
     case EMAIL = 'EMAIL';
     case URL = 'URL';
     case PHONE = 'PHONE';
-    case COLOR = 'COLOR';
     case VERSION = 'VERSION';
 
     public static function values(): array
@@ -38,12 +38,12 @@ enum SettingType: string
         return [
             self::TEXT->value => 'gray',
             self::TRANSLATABLE_TEXT->value => 'primary',
+            self::TRANSLATABLE_MARKDOWN->value => 'primary',
             self::BOOLEAN->value => 'success',
             self::IMAGE->value => 'info',
             self::EMAIL->value => 'primary',
             self::URL->value => 'info',
             self::PHONE->value => 'gray',
-            self::COLOR->value => 'warning',
             self::VERSION->value => 'warning',
         ];
     }

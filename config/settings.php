@@ -13,6 +13,10 @@ use App\Enum\SettingType;
 | Add future settings here, add their labels, then run the defaults seeder.
 | Image values are stored as relative paths on the public disk. Version
 | strings use stable MAJOR.MINOR.PATCH numbers (native build IDs excluded).
+|
+| Legal documents offer an optional external link and optional Markdown text
+| per language; clients show the text when present and fall back to the link.
+| Markdown is client-rendered, so active HTML (script/iframe/...) is rejected.
 */
 
 $settings = [
@@ -36,10 +40,6 @@ $settings = [
             'type' => SettingType::IMAGE,
             'default' => null, 'nullable' => true, 'public' => true,
         ],
-        'branding.primary_color' => [
-            'type' => SettingType::COLOR,
-            'default' => '#2563EB', 'nullable' => true, 'public' => true,
-        ],
         'support.email' => [
             'type' => SettingType::EMAIL,
             'default' => null, 'nullable' => true, 'public' => true,
@@ -56,9 +56,19 @@ $settings = [
             'type' => SettingType::URL,
             'default' => null, 'nullable' => true, 'public' => true,
         ],
+        'legal.privacy_policy_text' => [
+            'type' => SettingType::TRANSLATABLE_MARKDOWN,
+            'default' => ['en' => null, 'ar' => null],
+            'nullable' => true, 'public' => true, 'max_length' => 50000,
+        ],
         'legal.terms_url' => [
             'type' => SettingType::URL,
             'default' => null, 'nullable' => true, 'public' => true,
+        ],
+        'legal.terms_text' => [
+            'type' => SettingType::TRANSLATABLE_MARKDOWN,
+            'default' => ['en' => null, 'ar' => null],
+            'nullable' => true, 'public' => true, 'max_length' => 50000,
         ],
         'availability.maintenance_enabled' => [
             'type' => SettingType::BOOLEAN,

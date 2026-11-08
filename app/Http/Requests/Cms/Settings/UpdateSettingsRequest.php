@@ -28,20 +28,29 @@ class UpdateSettingsRequest extends FormRequest
             $rules[$key] = ['sometimes', ...($definition['nullable'] ? ['nullable'] : [])];
             $rules[$key] = [...$rules[$key], ...match ($definition['type']) {
                 SettingType::TEXT => ['string', 'max:'.($definition['max_length'] ?? 255)],
-                SettingType::TRANSLATABLE_TEXT => ['array'],
+                SettingType::TRANSLATABLE_TEXT, SettingType::TRANSLATABLE_MARKDOWN => ['array'],
                 SettingType::BOOLEAN => ['boolean'],
                 SettingType::IMAGE => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096', 'dimensions:max_width=4096,max_height=4096'],
                 SettingType::EMAIL => ['email:rfc', 'max:254'],
                 SettingType::URL => ['url:http,https', 'max:2048'],
                 SettingType::PHONE => ['string', 'max:40', 'regex:/^\+?[0-9 ().-]+$/'],
-                SettingType::COLOR => ['string', 'regex:/^#[0-9a-fA-F]{6}$/'],
                 SettingType::VERSION => ['string', 'max:32', 'regex:/^(0|[1-9][0-9]{0,8})\.(0|[1-9][0-9]{0,8})\.(0|[1-9][0-9]{0,8})$/'],
             }];
 
-            if ($definition['type'] === SettingType::TRANSLATABLE_TEXT) {
+            if (in_array($definition['type'], [SettingType::TRANSLATABLE_TEXT, SettingType::TRANSLATABLE_MARKDOWN], true)) {
                 $max = 'max:'.($definition['max_length'] ?? 255);
-                $rules["{$key}.en"] = ['sometimes', 'required', 'string', $max];
+                // Markdown documents are optional in every language, so both
+                // locales may be cleared; short labels keep English required.
+                $english = $definition['type'] === SettingType::TRANSLATABLE_MARKDOWN ? 'nullable' : 'required';
+                $rules["{$key}.en"] = ['sometimes', $english, 'string', $max];
                 $rules["{$key}.ar"] = ['sometimes', 'nullable', 'string', $max];
+
+                if ($definition['type'] === SettingType::TRANSLATABLE_MARKDOWN) {
+                    // Clients render this Markdown; never accept active HTML.
+                    $safe = 'not_regex:/<\s*\/?\s*(script|iframe|frame|object|embed|style|link|meta|form|input|button)\b/i';
+                    $rules["{$key}.en"][] = $safe;
+                    $rules["{$key}.ar"][] = $safe;
+                }
             }
         }
 
@@ -54,7 +63,7 @@ class UpdateSettingsRequest extends FormRequest
             $definitions = config('settings.fields', []);
             $allowed = array_keys($definitions);
             foreach ($definitions as $key => $definition) {
-                if ($definition['type'] === SettingType::TRANSLATABLE_TEXT) {
+                if (in_array($definition['type'], [SettingType::TRANSLATABLE_TEXT, SettingType::TRANSLATABLE_MARKDOWN], true)) {
                     array_push($allowed, "{$key}.en", "{$key}.ar");
                 }
             }

@@ -1,17 +1,41 @@
 # Application settings — review
 
-**Status:** the base settings feature was merged in PR #2. This follow-up removes default language from database-backed settings; default language is controlled by `config/app.php`. **Not deployed or started as a live preview.**
-Branch: `arena/051e15d7-laravel-dashboard-api` (the fixed Arena session branch).
+**Status:** the settings feature merged in PR #2 and the default-language removal merged in PR #3.
+This follow-up removes the primary-color setting and adds optional Markdown privacy/terms text in
+English and Arabic. Validation is recorded below. **No deployment or live preview has been performed.**
+Implementation branch: `arena/c6fcca39-laravel-dashboard-api` (the fixed Arena session branch).
 
 ## What was added
 
 - **One shared project icon** (`branding.app_icon`) returned to dashboard, web, and mobile clients. This is project branding, not a personal/user avatar.
-- Optional shared **logo**, **favicon**, project name, and primary color.
+- Optional shared **logo**, **favicon**, and project name. (The primary-color setting was removed —
+  clients keep their own bundled theme colors.)
 - **Default language is not a settings field.** It is controlled by `APP_LOCALE` in `config/app.php` (default `en`, fallback `en`). A supported `Accept-Language` header still overrides it for that request. Timezone handling is intentionally left as it was before this feature.
 - Support **email**, **phone**, and **website URL**.
-- **Privacy policy** and **terms** URLs.
+- **Privacy policy** and **terms**: an optional **URL** *and* optional **Markdown text** per language
+  (English/Arabic). Clients show the text when present and otherwise open the link.
 - Client **maintenance mode** and **registration switch**, enforced server-side. CMS/dashboard routes remain available during client maintenance.
 - Independent **iOS** and **Android** release policies: minimum supported version, `lock_for_update`, store URL, and translated update message.
+
+## Legal documents (link + text)
+
+Each document is independent and completely optional:
+
+| Field | Type | Notes |
+|---|---|---|
+| `legal.privacy_policy_url` | URL | http/https, max 2048 |
+| `legal.privacy_policy_text` | Markdown, `{en, ar}` | max 50000 per language |
+| `legal.terms_url` | URL | http/https, max 2048 |
+| `legal.terms_text` | Markdown, `{en, ar}` | max 50000 per language |
+
+- Both languages of the text are nullable, so a document can be English-only, Arabic-only, or empty.
+- A single-language patch merges (`{ar: "…"}` keeps `en`); `{ar: null}` clears only Arabic; sending
+  `null` for the whole field clears both languages.
+- Expected client behavior: show the text if it exists (fallback to English), otherwise open the link;
+  if both exist, show the text with a "view full page" link; if neither exists, hide the entry.
+- Markdown is rendered by clients, so active HTML (`script`, `iframe`, `object`, `embed`, `style`,
+  `link`, `meta`, `form`, `input`, `button`) is rejected with a 422 on that language key.
+- The builder exposes these as `type: "TRANSLATABLE_MARKDOWN"` with `format: "markdown"`.
 
 ## Update-lock behavior
 
@@ -97,7 +121,8 @@ An API flag alone cannot stop an already-installed native app from opening; the 
 
 ## Review checklist
 
-- [ ] Shared project icon/logo/favicon and branding fields match the desired dashboard form.
+- [ ] Shared project icon/logo/favicon and branding fields match the desired dashboard form (no color field).
+- [ ] Privacy/terms behave as desired: optional link + optional Markdown text, per language, text preferred by clients.
 - [ ] iOS/Android minimum-version lock semantics are correct.
 - [ ] Maintenance should block all client routes, including authenticated client routes, while leaving CMS and public settings available.
 - [ ] Registration switch should block only new registrations, not existing-client login.
@@ -108,11 +133,11 @@ An API flag alone cannot stop an already-installed native app from opening; the 
 
 Focused tests passed in the PHP-WASM sandbox:
 
-- `tests/Feature/Settings/ApplicationSettingsTest.php`: **18 tests, 158 assertions — OK**
+- `tests/Feature/Settings/ApplicationSettingsTest.php`: **20 tests, 197 assertions — OK**
 - `tests/Feature/Clients/ClientAuthTest.php`: **23 tests, 89 assertions — OK**
 - PHP syntax check: **139 files, 0 errors**
 - Scratch-database migration: **OK**
-- `SettingsSeeder` run twice on a fresh scratch database: **OK**, **21 rows** for **21 registry keys**, no duplicates, **0 locale rows**
+- `SettingsSeeder` run twice on a fresh scratch database: **OK**, **22 rows** for **22 registry keys**, no duplicates, **0 color rows**, **0 locale rows**
 - Settings routes registered: **4**
 
 The temporary PHP-WASM migration override used for testing was removed. The legacy full test suite was not run because it contains pre-existing unrelated starter-kit assumptions.
@@ -125,6 +150,9 @@ The temporary PHP-WASM migration override used for testing was removed. The lega
 4. Run `php artisan db:seed --class=SettingsSeeder --force` (idempotent; does not overwrite saved values). `migrate --seed` also includes it through `DatabaseSeeder`.
 5. Run `php artisan storage:link` so public image URLs resolve.
 6. If configuration is cached, rebuild the cache after deploying the registry.
-7. Assign existing `settings.view` / `settings.edit` permissions as needed. Avoid casually rerunning `RolePermissionSeeder` because it syncs role permissions.
+7. Optional cleanup: an old `branding.primary_color` row from a previous deployment is ignored by the
+   API (only registry keys are read). Delete it if you want a tidy table:
+   `Setting::where('key', 'branding.primary_color')->delete();`
+8. Assign existing `settings.view` / `settings.edit` permissions as needed. Avoid casually rerunning `RolePermissionSeeder` because it syncs role permissions.
 
 No secrets belong in this settings table; only the fixed public registry keys are accepted.

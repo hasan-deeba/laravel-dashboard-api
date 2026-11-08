@@ -29,12 +29,12 @@ return [
     'setting_type' => [
         'TEXT' => 'Text',
         'TRANSLATABLE_TEXT' => 'Translated text',
+        'TRANSLATABLE_MARKDOWN' => 'Markdown text (translated)',
         'BOOLEAN' => 'On / off',
         'IMAGE' => 'Image',
         'EMAIL' => 'Email',
         'URL' => 'URL',
         'PHONE' => 'Phone',
-        'COLOR' => 'Color',
         'VERSION' => 'Version',
     ],
 ];
