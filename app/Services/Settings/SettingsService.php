@@ -61,6 +61,9 @@ class SettingsService extends CrudService
             if ($definition['type'] === SettingType::VERSION) {
                 $field['format'] = 'MAJOR.MINOR.PATCH';
             }
+            if ($definition['type'] === SettingType::TRANSLATABLE_MARKDOWN) {
+                $field['format'] = 'markdown';
+            }
 
             $groups[explode('.', $key)[0]]['fields'][] = $field;
         }
@@ -89,10 +92,12 @@ class SettingsService extends CrudService
                     $value = Arr::get($files, $key, Arr::get($data, $key));
                     $value = match ($definition['type']) {
                         SettingType::BOOLEAN => (bool) $value,
-                        SettingType::TRANSLATABLE_TEXT => array_replace(
-                            $current[$key],
-                            Arr::only($value, ['en', 'ar']),
-                        ),
+                        SettingType::TRANSLATABLE_TEXT, SettingType::TRANSLATABLE_MARKDOWN => $value === null
+                            ? ['en' => null, 'ar' => null]
+                            : array_replace(
+                                $current[$key] ?? ['en' => null, 'ar' => null],
+                                Arr::only($value, ['en', 'ar']),
+                            ),
                         SettingType::IMAGE => $value instanceof UploadedFile
                             ? $this->storeImage($value, $newFiles)
                             : null,

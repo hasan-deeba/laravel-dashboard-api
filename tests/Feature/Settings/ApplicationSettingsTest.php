@@ -106,12 +106,17 @@ class ApplicationSettingsTest extends TestCase
         $this->assertSame('IMAGE', $fields['branding.app_icon']['type']);
         $this->assertSame(4096, $fields['branding.app_icon']['max_kilobytes']);
         $this->assertSame('MAJOR.MINOR.PATCH', $fields['apps.ios.version']['format']);
+        $this->assertSame('TRANSLATABLE_MARKDOWN', $fields['legal.privacy_policy_text']['type']);
+        $this->assertSame('markdown', $fields['legal.privacy_policy_text']['format']);
+        $this->assertSame(50000, $fields['legal.terms_text']['max_length']);
+        $this->assertTrue($fields['legal.terms_text']['nullable']);
+        $this->assertArrayNotHasKey('branding.primary_color', $fields->all());
     }
 
     public function test_partial_update_preserves_types_and_unsubmitted_settings(): void
     {
         $this->actingAs($this->editor(), 'cms')->postJson('/cms/settings', [
-            'branding' => ['app_name' => ['en' => 'Shared project', 'ar' => 'المشروع المشترك'], 'primary_color' => '#112233'],
+            'branding' => ['app_name' => ['en' => 'Shared project', 'ar' => 'المشروع المشترك']],
             'support' => ['email' => 'help@example.com', 'phone' => '+31 (174) 123-456'],
             'legal' => ['privacy_policy_url' => 'https://example.com/privacy', 'terms_url' => 'https://example.com/terms'],
             'availability' => ['registration_enabled' => false],
@@ -123,7 +128,6 @@ class ApplicationSettingsTest extends TestCase
             ->assertJsonPath('data.branding.logo', null)
             ->assertJsonPath('data.availability.registration_enabled', false);
         $this->assertSame(false, Setting::where('key', 'availability.registration_enabled')->first()->value);
-        $this->assertSame('#112233', Setting::where('key', 'branding.primary_color')->first()->value);
 
         // A later translation-only patch must retain English and other groups.
         $this->actingAs($this->editor(), 'cms')->postJson('/cms/settings', [
@@ -138,13 +142,77 @@ class ApplicationSettingsTest extends TestCase
         $user = $this->actingAs($this->editor(), 'cms');
         $user->postJson('/cms/settings', ['secret' => 'do-not-store'])->assertUnprocessable()->assertJsonValidationErrors('secret');
         $user->postJson('/cms/settings', [])->assertUnprocessable()->assertJsonValidationErrors('settings');
-        $user->postJson('/cms/settings', ['branding' => ['primary_color' => 'blue']])->assertUnprocessable();
+        $user->postJson('/cms/settings', ['support' => ['website_url' => 'not-a-url']])->assertUnprocessable();
+        $user->postJson('/cms/settings', ['branding' => ['primary_color' => '#112233']])
+            ->assertUnprocessable()->assertJsonValidationErrors('branding.primary_color');
         $user->postJson('/cms/settings', ['support' => ['email' => 'invalid']])->assertUnprocessable();
         $user->postJson('/cms/settings', ['localization' => ['default_locale' => 'ar']])
             ->assertUnprocessable()->assertJsonValidationErrors('localization.default_locale');
         $user->postJson('/cms/settings', ['availability' => ['maintenance_enabled' => 'perhaps']])->assertUnprocessable();
         $user->postJson('/cms/settings', ['apps' => ['ios' => ['version' => '1.2']]])->assertUnprocessable();
         $user->postJson('/cms/settings', ['branding' => ['app_name' => ['en' => 'Valid', 'fr' => 'Unknown']]])->assertUnprocessable();
+        $this->assertDatabaseCount('settings', 0);
+    }
+
+    public function test_legal_documents_offer_optional_links_and_markdown_text_per_language(): void
+    {
+        $user = $this->actingAs($this->editor(), 'cms');
+
+        // Both the link and the text start empty; neither is required.
+        $this->getJson('/api/settings')
+            ->assertJsonPath('data.legal.privacy_policy_url', null)
+            ->assertJsonPath('data.legal.privacy_policy_text', ['en' => null, 'ar' => null])
+            ->assertJsonPath('data.legal.terms_text', ['en' => null, 'ar' => null]);
+
+        // A link alone is valid.
+        $user->postJson('/cms/settings', ['legal' => ['privacy_policy_url' => 'https://example.com/privacy']])
+            ->assertOk();
+        $this->getJson('/api/settings')
+            ->assertJsonPath('data.legal.privacy_policy_url', 'https://example.com/privacy')
+            ->assertJsonPath('data.legal.privacy_policy_text.en', null);
+
+        // Markdown text alone is valid too, in both languages, alongside the link.
+        $english = "# Privacy Policy\n\nWe **never** sell your data.\n\n- Point one\n- Point two\n\n[Contact](https://example.com)";
+        $arabic = "# سياسة الخصوصية\n\nنحن **لا** نبيع بياناتك.\n\n- بند أول";
+        $user->postJson('/cms/settings', ['legal' => [
+            'privacy_policy_text' => ['en' => $english, 'ar' => $arabic],
+            'terms_text' => ['en' => '# Terms'],
+        ]])->assertOk();
+
+        $this->getJson('/api/settings')
+            ->assertJsonPath('data.legal.privacy_policy_text.en', $english)
+            ->assertJsonPath('data.legal.privacy_policy_text.ar', $arabic)
+            ->assertJsonPath('data.legal.terms_text.en', '# Terms')
+            ->assertJsonPath('data.legal.terms_text.ar', null)
+            ->assertJsonPath('data.legal.privacy_policy_url', 'https://example.com/privacy');
+
+        // A single-language patch keeps the other language.
+        $user->postJson('/cms/settings', ['legal' => ['privacy_policy_text' => ['ar' => 'نص محدث']]])->assertOk();
+        $this->assertSame(['en' => $english, 'ar' => 'نص محدث'], app(SettingsService::class)->value('legal.privacy_policy_text'));
+
+        // One language can be cleared on its own.
+        $user->postJson('/cms/settings', ['legal' => ['privacy_policy_text' => ['ar' => null]]])->assertOk();
+        $this->assertSame(['en' => $english, 'ar' => null], app(SettingsService::class)->value('legal.privacy_policy_text'));
+
+        // Sending null clears the whole document without touching the link.
+        $user->postJson('/cms/settings', ['legal' => ['privacy_policy_text' => null]])->assertOk();
+        $this->getJson('/api/settings')
+            ->assertJsonPath('data.legal.privacy_policy_text', ['en' => null, 'ar' => null])
+            ->assertJsonPath('data.legal.privacy_policy_url', 'https://example.com/privacy');
+    }
+
+    public function test_legal_markdown_rejects_active_html_and_unknown_languages(): void
+    {
+        $user = $this->actingAs($this->editor(), 'cms');
+
+        $user->postJson('/cms/settings', ['legal' => ['privacy_policy_text' => ['en' => 'Hi <script>alert(1)</script>']]])
+            ->assertUnprocessable()->assertJsonValidationErrors('legal.privacy_policy_text.en');
+        $user->postJson('/cms/settings', ['legal' => ['terms_text' => ['ar' => '<iframe src="https://evil.test"></iframe>']]])
+            ->assertUnprocessable()->assertJsonValidationErrors('legal.terms_text.ar');
+        $user->postJson('/cms/settings', ['legal' => ['terms_text' => ['fr' => 'Bonjour']]])
+            ->assertUnprocessable()->assertJsonValidationErrors('legal.terms_text.fr');
+        $user->postJson('/cms/settings', ['legal' => ['terms_text' => ['en' => str_repeat('a', 50001)]]])
+            ->assertUnprocessable()->assertJsonValidationErrors('legal.terms_text.en');
         $this->assertDatabaseCount('settings', 0);
     }
 

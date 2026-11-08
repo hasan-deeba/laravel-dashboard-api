@@ -29,12 +29,12 @@ return [
     'setting_type' => [
         'TEXT' => 'نص',
         'TRANSLATABLE_TEXT' => 'نص مترجم',
+        'TRANSLATABLE_MARKDOWN' => 'نص Markdown (مترجم)',
         'BOOLEAN' => 'تفعيل / تعطيل',
         'IMAGE' => 'صورة',
         'EMAIL' => 'بريد إلكتروني',
         'URL' => 'رابط',
         'PHONE' => 'هاتف',
-        'COLOR' => 'لون',
         'VERSION' => 'إصدار',
     ],
 ];
