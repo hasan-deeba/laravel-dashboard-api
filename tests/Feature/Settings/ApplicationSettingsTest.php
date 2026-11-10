@@ -64,12 +64,34 @@ class ApplicationSettingsTest extends TestCase
         $response->assertJsonStructure(['message', 'data' => [
                 'branding', 'support', 'legal', 'availability', 'apps', 'update',
             ]])
-            ->assertJsonPath('data.branding.app_name.en', 'HeroDash')
+            ->assertJsonMissingPath('data.branding.app_name')
+            ->assertJsonPath('data.legal.privacy_policy_text', null)
+            ->assertJsonPath('data.legal.terms_text', null)
             ->assertJsonPath('data.branding.app_icon', null)
             ->assertJsonPath('data.apps.ios.lock_for_update', false)
             ->assertJsonPath('data.apps.android.lock_for_update', false)
             ->assertJsonPath('data.update', null)
             ->assertJsonMissingPath('data.code');
+    }
+
+    public function test_public_settings_return_only_markdown_in_the_requested_language(): void
+    {
+        $this->save(['legal' => [
+            'privacy_policy_text' => ['en' => '# English privacy', 'ar' => '# سياسة الخصوصية'],
+            'terms_text' => ['en' => '# English terms', 'ar' => '# الشروط'],
+        ]]);
+
+        $this->withHeader('Accept-Language', 'ar')->getJson('/api/settings')->assertOk()
+            ->assertJsonPath('data.legal.privacy_policy_text', '# سياسة الخصوصية')
+            ->assertJsonPath('data.legal.terms_text', '# الشروط')
+            ->assertJsonMissing(['# English privacy', '# English terms'])
+            ->assertJsonMissingPath('data.branding.app_name');
+
+        $this->withHeader('Accept-Language', 'en')->getJson('/api/settings')->assertOk()
+            ->assertJsonPath('data.legal.privacy_policy_text', '# English privacy')
+            ->assertJsonPath('data.legal.terms_text', '# English terms')
+            ->assertJsonMissing(['# سياسة الخصوصية', '# الشروط'])
+            ->assertJsonMissingPath('data.branding.app_name');
     }
 
     public function test_cms_settings_require_authentication_and_view_permission(): void

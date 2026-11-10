@@ -228,8 +228,12 @@ class SettingsService extends CrudService
         $values = [];
         foreach ($this->effectiveValues() as $key => $value) {
             $definition = $this->definitions()[$key];
-            if ($publicOnly && !$definition['public']) {
+            if ($publicOnly && (!$definition['public'] || $key === 'branding.app_name')) {
                 continue;
+            }
+            if ($publicOnly) {
+                $setting = new Setting(['key' => $key, 'value' => $value]);
+                $value = $setting->transformItemInclude(['value'])['value'];
             }
             if ($definition['type'] === SettingType::IMAGE && $value !== null) {
                 $value = url('storage/'.$value);

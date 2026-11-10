@@ -2,6 +2,7 @@
 
 namespace App\Models\Settings;
 
+use App\Enum\SettingType;
 use App\Traits\ActivityLogsTrait;
 use App\Traits\ModelTrait;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -21,6 +22,22 @@ class Setting extends Model
     protected $minimumAllowedKey = ['id', 'key', 'value', 'created_at'];
     protected $notAllowedKey = ['updated_at'];
     protected $logExcept = ['created_at', 'updated_at'];
+
+    protected function defaultExtraFields(): array
+    {
+        return [
+            'value' => function () {
+                $value = $this->getAttribute('value');
+                $definition = config('settings.fields.'.$this->key);
+
+                if (($definition['type'] ?? null) === SettingType::TRANSLATABLE_MARKDOWN) {
+                    return $value[app()->getLocale()] ?? null;
+                }
+
+                return $value;
+            },
+        ];
+    }
 
     /**
      * Values are JSON in a portable text column, so strings, booleans and

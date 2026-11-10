@@ -78,7 +78,7 @@ The response uses the client envelope `{ "message": ..., "data": ... }`. The `da
 }
 ```
 
-Without `platform` and `app_version`, `data.update` is `null`; the endpoint does not guess that an unknown client is current. Invalid or incomplete version context returns validation errors. Public settings responses are marked `no-store` so startup checks see fresh lock/maintenance changes.
+Without `platform` and `app_version`, `data.update` is `null`; the endpoint does not guess that an unknown client is current. Invalid or incomplete version context returns validation errors. Public settings responses are marked `no-store` so startup checks see fresh lock/maintenance changes. The public API omits `branding.app_name`; each legal Markdown setting is returned as a single string (or `null`) selected by `Accept-Language` (`ar` or `en`). The CMS settings endpoint continues to expose both locales for editing.
 
 Example partial dashboard update:
 
