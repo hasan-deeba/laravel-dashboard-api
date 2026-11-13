@@ -4,7 +4,7 @@ namespace App\Http\Requests\Cms\Settings;
 
 use App\Enum\AppPlatform;
 use App\Enum\SettingType;
-use App\Models\Settings\Setting;
+use App\Models\General\Setting;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Validator;

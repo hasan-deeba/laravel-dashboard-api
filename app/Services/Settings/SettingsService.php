@@ -4,7 +4,7 @@ namespace App\Services\Settings;
 
 use App\Enum\AppPlatform;
 use App\Enum\SettingType;
-use App\Models\Settings\Setting;
+use App\Models\General\Setting;
 use App\Services\Cms\CrudService;
 use App\Services\ResultService;
 use Illuminate\Http\Request;

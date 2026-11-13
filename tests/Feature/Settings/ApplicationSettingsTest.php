@@ -7,7 +7,7 @@ use App\Enum\MaritalStatusType;
 use App\Models\AccessManagement\Role;
 use App\Models\AccessManagement\User;
 use App\Models\Clients\Client;
-use App\Models\Settings\Setting;
+use App\Models\General\Setting;
 use App\Services\Settings\SettingsService;
 use Database\Seeders\SettingsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

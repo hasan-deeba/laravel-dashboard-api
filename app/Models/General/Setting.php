@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Settings;
+namespace App\Models\General;
 
 use App\Enum\SettingType;
 use App\Traits\ActivityLogsTrait;

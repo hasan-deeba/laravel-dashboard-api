@@ -41,6 +41,17 @@ Content-Type: application/json
 
 There are no separate register/unregister device endpoints. Login or OTP verification upserts the token; logout removes only the submitted token. The mobile app should provide a refreshed token on its next login/verification because a separate token-refresh API is intentionally not included in this test slice.
 
+## Client notification inbox
+
+Authenticated clients can retrieve their own database notifications newest-first:
+
+```http
+GET /api/notifications?per_page=15&page=1
+Authorization: Bearer <client-token>
+```
+
+`per_page` defaults to 15 and is limited to 1–100. The response uses the normal client envelope and contains `data.notifications` (transformed with the model's `transformList()`), `data.unread_count`, and `data.pagination` (`current_page`, `per_page`, `last_page`, `total`, `from`, `to`). Records are scoped to the authenticated client.
+
 ## Test push
 
 ```http
@@ -51,7 +62,7 @@ Content-Type: application/json
 {"title":"Push test","body":"Your app can receive notifications."}
 ```
 
-This sends to all registered devices for the authenticated client (limited to three requests per minute) and stores the notification in Laravel's `notifications` table. Missing devices return 409; delivery/configuration failure returns 503. Notification channel selection and payload/database formats live in the notification classes under `app/Notifications`; the helper only selects recipients and dispatches them.
+This sends to all registered devices for the authenticated client (limited to three requests per minute) and stores the notification in Laravel's `notifications` table. Missing devices return 409; delivery/configuration failure returns 503. Notification channel selection and payload/database formats live in the notification classes under `app/Notifications`; client notification records use `App\Models\General\Notification`, which extends Laravel's database notification model and uses `ModelTrait` for API transformations.
 
 ## Future bilingual dashboard broadcasts
 
