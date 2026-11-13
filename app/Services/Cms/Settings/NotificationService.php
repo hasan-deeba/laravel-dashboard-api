@@ -2,7 +2,7 @@
 
 namespace App\Services\Cms\Settings;
 
-use App\Models\Settings\Notification;
+use App\Models\General\Notification;
 use App\Services\Cms\CrudService;
 use App\Services\ResultService;
 use Illuminate\Contracts\Auth\Authenticatable;

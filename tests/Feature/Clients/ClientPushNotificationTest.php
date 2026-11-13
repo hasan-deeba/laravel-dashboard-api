@@ -7,6 +7,7 @@ use App\Models\Clients\Client;
 use App\Notifications\ClientTestPushNotification;
 use App\Services\Api\Clients\FirebaseCloudMessaging;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class ClientPushNotificationTest extends TestCase
@@ -122,6 +123,41 @@ class ClientPushNotificationTest extends TestCase
         $this->assertDatabaseCount('notifications', 2);
     }
 
+    public function test_client_notifications_are_paginated_and_transformed(): void
+    {
+        $client = Client::factory()->create();
+        $otherClient = Client::factory()->create();
+
+        foreach (range(1, 3) as $index) {
+            $client->notifications()->create([
+                'id' => (string) Str::uuid(),
+                'type' => ClientTestPushNotification::class,
+                'data' => ['title' => "Notification {$index}", 'body' => 'A push notification'],
+                'read_at' => $index === 1 ? now() : null,
+            ]);
+        }
+        $otherClient->notifications()->create([
+            'id' => (string) Str::uuid(),
+            'type' => ClientTestPushNotification::class,
+            'data' => ['title' => 'Private to another client'],
+        ]);
+
+        $this->actingAs($client, 'clients')->getJson('/api/notifications?per_page=2&page=1')
+            ->assertOk()
+            ->assertJsonPath('data.unread_count', 2)
+            ->assertJsonPath('data.pagination.current_page', 1)
+            ->assertJsonPath('data.pagination.per_page', 2)
+            ->assertJsonPath('data.pagination.last_page', 2)
+            ->assertJsonPath('data.pagination.total', 3)
+            ->assertJsonCount(2, 'data.notifications')
+            ->assertJsonMissing(['title' => 'Private to another client'])
+            ->assertJsonMissingPath('data.notifications.0.notifiable_type');
+
+        $this->actingAs($client, 'clients')->getJson('/api/notifications?per_page=2&page=2')
+            ->assertOk()->assertJsonCount(1, 'data.notifications');
+        $this->actingAs($client, 'clients')->getJson('/api/notifications?per_page=0')->assertUnprocessable();
+    }
+
     public function test_test_push_requires_a_registered_device(): void
     {
         $client = Client::factory()->create();
@@ -156,6 +192,7 @@ class ClientPushNotificationTest extends TestCase
 
     public function test_notification_endpoints_require_client_authentication(): void
     {
+        $this->getJson('/api/notifications')->assertUnauthorized();
         $this->postJson('/api/notifications/test', [
             'title' => 'Test', 'body' => 'Hello',
         ])->assertUnauthorized();
