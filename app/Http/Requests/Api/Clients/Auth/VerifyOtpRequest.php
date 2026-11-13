@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Api\Clients\Auth;
 
+use App\Enum\AppPlatform;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class VerifyOtpRequest extends FormRequest
 {
@@ -19,6 +21,8 @@ class VerifyOtpRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email', 'exists:clients,email'],
             'code' => ['required', 'string'],
+            'device_token' => ['nullable', 'string', 'max:512', 'required_with:device_platform'],
+            'device_platform' => ['nullable', 'string', Rule::in(AppPlatform::values()), 'required_with:device_token'],
         ];
     }
 }

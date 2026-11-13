@@ -25,6 +25,11 @@ return [
     'Expired code' => 'Expired code.',
     'Logged in successfully' => 'Logged in successfully.',
     'Logged out successfully' => 'Logged out successfully.',
+    'Device registered for notifications' => 'Device registered for notifications.',
+    'Device unregistered from notifications' => 'Device unregistered from notifications.',
+    'Register this device for notifications first' => 'Register this device for notifications first.',
+    'Unable to deliver the test notification' => 'Unable to deliver the test notification.',
+    'Test notification sent' => 'Test notification sent.',
     'Password reset successfully' => 'Password reset successfully.',
     'Too many login attempts' => 'Too many login attempts. Please try again in :seconds seconds.',
 ];

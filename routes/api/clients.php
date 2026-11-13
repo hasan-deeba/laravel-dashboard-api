@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Clients\ClientAuthController;
+use App\Http\Controllers\Api\Clients\PushNotificationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -30,5 +31,8 @@ Route::middleware('client.available')->group(function () {
     Route::middleware('auth:clients')->group(function () {
         Route::get('me', [ClientAuthController::class, 'me']);
         Route::post('logout', [ClientAuthController::class, 'logout']);
+
+        Route::post('notifications/test', [PushNotificationController::class, 'sendTest'])
+            ->middleware('throttle:3,1');
     });
 });
