@@ -6,6 +6,7 @@ use App\Enum\GenderType;
 use App\Enum\MaritalStatusType;
 use App\Traits\ModelTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -65,6 +66,11 @@ class Client extends Authenticatable
             },
         ];
         parent::__construct($attributes);
+    }
+
+    public function devices(): HasMany
+    {
+        return $this->hasMany(ClientDevice::class);
     }
 
     protected function casts(): array

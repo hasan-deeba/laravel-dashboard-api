@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Api\Clients;
 
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Clients\Auth\ClientForgetPasswordRequest;
 use App\Http\Requests\Api\Clients\Auth\ClientLoginRequest;
+use App\Http\Requests\Api\Clients\Auth\ClientLogoutRequest;
 use App\Http\Requests\Api\Clients\Auth\ClientRegisterRequest;
 use App\Http\Requests\Api\Clients\Auth\ClientResetPasswordRequest;
 use App\Http\Requests\Api\Clients\Auth\ResendOtpRequest;
 use App\Http\Requests\Api\Clients\Auth\VerifyOtpRequest;
+use App\Models\Clients\Client;
 use App\Services\Api\Clients\ClientAuthService;
 use App\Traits\ClientApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -103,9 +106,14 @@ class ClientAuthController extends Controller
     /**
      * Logout client and revoke the current token.
      */
-    public function logout(Request $request): JsonResponse
+    public function logout(ClientLogoutRequest $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        /** @var Client $client */
+        $client = $request->user();
+        if ($deviceToken = $request->validated('device_token')) {
+            NotificationHelper::removeDeviceToken($deviceToken, $client);
+        }
+        $client->currentAccessToken()->delete();
 
         return $this->successResponse(__('messages.Logged out successfully'));
     }

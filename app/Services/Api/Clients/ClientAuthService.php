@@ -5,6 +5,7 @@ namespace App\Services\Api\Clients;
 use App\Enum\GenderType;
 use App\Enum\MaritalStatusType;
 use App\Enum\OTPType;
+use App\Helpers\NotificationHelper;
 use App\Helpers\OTPHelper;
 use App\Models\Clients\Client;
 use App\Services\ResultService;
@@ -105,6 +106,10 @@ class ClientAuthService
 
         $result->item['code']->delete();
 
+        if (isset($data['device_token'], $data['device_platform'])) {
+            NotificationHelper::setDeviceToken($data['device_token'], $client, $data['device_platform']);
+        }
+
         return new ResultService(
             valid: true,
             code: 200,
@@ -175,6 +180,10 @@ class ClientAuthService
             $this->sendOtp($client, OTPType::REGISTER);
 
             return new ResultService(false, 403, __('messages.Account not verified'));
+        }
+
+        if (isset($data['device_token'], $data['device_platform'])) {
+            NotificationHelper::setDeviceToken($data['device_token'], $client, $data['device_platform']);
         }
 
         return new ResultService(
